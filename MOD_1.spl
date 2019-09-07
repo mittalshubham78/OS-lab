@@ -1,0 +1,75 @@
+alias funct_num R1;
+alias curr_pid R2;
+alias user_area_page R3;
+
+ if(funct_num == FREE_USER_AREA_PAGE) then
+   user_area_page=[PROCESS_TABLE + (curr_pid*16) +11];
+      backup;
+
+  R1=RELEASE_PAGE;
+  R2=user_area_page;
+
+   call MOD_2;
+   
+   restore;
+   return;
+ endif;
+
+ if(funct_num==EXIT_PROCESS) then
+    backup;
+  R1=FREE_PAGE_TABLE;
+  R2=curr_pid;
+  call MOD_1;
+  restore;
+
+  backup;
+  R1=FREE_USER_AREA_PAGE;
+   R2=curr_pid;
+  call MOD_1;
+  restore;
+
+ [PROCESS_TABLE + (curr_pid*16) +4]=TERMINATED;
+  return;
+ endif;
+
+if(fuct_num == FREE_PAGE_TABLE) then
+  alias temp R4;
+  alias disk_entry R5;
+
+  PTBR=PAGE_TABLE_BASE + curr_pid * 20;
+    [PTBR+0]=-1;
+    [PTBR+1]="0000";
+    [PTBR+2]=-1;
+    [PTBR+3]="0000";
+    disk_entry=(curr_pid * 10) + DISK_MAP_TABLE;
+     temp=0;
+  
+  while(temp < 10) do
+if(([disk_entry + temp]!=-1) && (temp==2 || temp==3 || temp==8 || temp==9)) then
+      backup;
+    R1=RELEASE_BLOCK;
+   R2=[disk_entry + temp];
+     call MOD_2;
+     restore;
+  endif;
+   [disk_entry + temp]=-1;
+    temp=temp+1;
+endwhile;
+ temp=4;
+
+  while(temp < 20) do
+   if([PTBR + temp]!=-1) then
+    backup;
+   R1=RELEASE_PAGE;
+   R2=[PTBR + temp];
+    call MOD_2;
+  restore;
+
+  [PTBR + temp]=-1;
+   [PTBR + temp + 1]="0000";
+  endif;
+temp=temp+2;
+  endwhile;
+ return;
+endif;
+return;
