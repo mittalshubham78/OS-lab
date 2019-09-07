@@ -1,0 +1,42 @@
+alias functionnum R1;
+alias currentPID R2;
+alias word R3;
+
+if(functionnum ==3) then
+   
+backup;
+R1=8;
+R2=currentPID;
+
+call MOD_0;
+restore;
+
+print word;
+backup;
+
+R1=9;
+R2=currentPID;
+call MOD_0;
+
+restore;
+return;
+ 
+endif;
+
+if(functionnum==4) then
+  backup;
+  R1=8;
+  R2=[SYSTEM_STATUS_TABLE +1];
+ call MOD_0;
+ restore;
+ read;
+ [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE +1]*16) +4]=WAIT_TERMINAL;
+  backup;
+  call MOD_5;
+  restore;
+  alias physical_add R8;
+  physical_add=[PTBR + (R3/512)*2]*512 + R3%512;
+ 
+  [physical_add]=[PROCESS_TABLE + (currentPID*16) + 8];
+   endif;
+  return;
